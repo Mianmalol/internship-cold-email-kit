@@ -1,0 +1,17 @@
+# --- Private: never publish ---
+# Your resume and any PDFs
+*.pdf
+
+# Your real working files (your info + real recipient emails)
+mailmerge_template.txt
+mailmerge_database.csv
+mailmerge_server.conf
+sent_log.csv
+portal_targets_for_later.csv
+
+# Gmail API credentials, if ever used
+credentials.json
+token.json
+
+# macOS
+.DS_Store

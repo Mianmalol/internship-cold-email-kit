@@ -1,0 +1,16 @@
+TO: {{contact_email}}
+SUBJECT: {{subject}}
+FROM: Your Name <you@gmail.com>
+ATTACHMENT: resume.pdf
+
+Hi {{contact_name}},
+
+My name is Your Name, a <one line about your background>, and I'm reaching out because I'd love to intern at {{company}}. {{note}}.
+
+I'm hoping to contribute in the {{role}} role this coming school year, and I'm happy to work remotely. <Add any constraints here, e.g. looking for an unpaid role, work authorization status>. I've attached my resume, and I'd love to tell you more or hop on a quick call whenever suits you.
+
+Thank you for your time and consideration.
+
+Best regards,
+Your Name
+your-phone · your-linkedin
