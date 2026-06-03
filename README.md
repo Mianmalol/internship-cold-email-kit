@@ -8,6 +8,10 @@ It's a thin layer on top of [mailmerge](https://github.com/awdeorio/mailmerge)
 attaches your resume, previews everything, sends, and archives who you've
 contacted.
 
+<p align="center">
+  <img src="assets/workflow.png" alt="How the kit works: CSV and template, personalize, attach resume, preview, send via Gmail, never email twice" width="640">
+</p>
+
 > Be a good citizen: keep volume low, make every message genuinely specific,
 > and only email people/addresses that are meant to receive applications.
 > This is for personalized outreach, not bulk spam.
