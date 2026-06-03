@@ -18,8 +18,12 @@ contacted.
   `{{placeholders}}`.
 - `mailmerge_server.conf` — Gmail SMTP settings (password entered at send time,
   never stored).
-- `send_batch.sh` — confirms recipients, sends, then moves sent rows into
-  `sent_log.csv` and empties the database so nobody is contacted twice.
+- `send.py` — **preferred sender (macOS).** Reads the Gmail app password from the
+  macOS Keychain at send time, so there is no interactive password prompt and it
+  can run anywhere (even non-interactively). Previews, sends, then moves sent rows
+  into `sent_log.csv` and empties the database so nobody is contacted twice.
+- `send_batch.sh` — legacy fallback: confirms recipients, sends via `mailmerge`'s
+  hidden password prompt, then archives and empties the database the same way.
 
 ## Setup
 ```bash
@@ -37,16 +41,31 @@ cp mailmerge_server.conf.example  mailmerge_server.conf
 # 4. Gmail app password (not your normal password):
 #    - Enable 2-Step Verification: https://myaccount.google.com/security
 #    - Create an app password:      https://myaccount.google.com/apppasswords
-#    - mailmerge prompts for it when sending.
+
+# 5. (macOS, for send.py) Store the app password once in the Keychain,
+#    encrypted, never written to disk. You'll be prompted to type it twice:
+security add-generic-password -s mailmerge-gmail -a "$USER" -w
 ```
 
 ## Usage
+
+### Preferred: `send.py` (macOS Keychain — no password prompt)
+```bash
+python3 send.py            # dry-run: preview every email, send nothing
+python3 send.py --send     # preview, then ask "Send N emails? [y/N]", then send
+python3 send.py --send --yes   # skip the confirmation prompt (hands-off)
+```
+The app password is read from the Keychain at send time, so this works in any
+shell. On a successful send, sent rows are archived to `sent_log.csv`, the
+database is reset to header-only, and any failed rows are kept for retry.
+
+### Legacy: raw mailmerge / `send_batch.sh`
 ```bash
 mailmerge --dry-run --no-limit     # preview every email, send nothing
 mailmerge --no-dry-run --limit 1   # send only the first row (good as a self-test)
 ./send_batch.sh                    # send all, then archive to sent_log.csv
 ```
-Run sends from a real terminal so the hidden password prompt works.
+Run these from a real terminal so mailmerge's hidden password prompt works.
 
 ## CSV columns
 The header row defines the `{{variables}}`. The defaults are:

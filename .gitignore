@@ -15,3 +15,10 @@ token.json
 
 # macOS
 .DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Personal operating guide (contains your own contacts/notes)
+CLAUDE.md
