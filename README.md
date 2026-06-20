@@ -370,7 +370,7 @@ The codebase is small and standard-library only:
 - `common.py` — shared helpers (config, credentials, SMTP/IMAP, CSV I/O).
 - `outreach_cli.py` — the `outreach` command (everything except sending).
 - `send.py` — the `outreach-send` command (the only sender).
-- `read_replies.py` / `thread_reply.py` — Gmail reply reading and threaded replies.
+- `read_replies.py` — Gmail reply/date reading (used by `replies` and `backfill-dates`).
 
 ---
 
