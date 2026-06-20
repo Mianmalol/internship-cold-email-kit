@@ -12,6 +12,8 @@ Reuses the existing files so behavior matches the old flow:
 On a successful send it archives the sent rows into sent_log.csv and resets the
 database to header-only, so no company is ever emailed twice.
 
+Shared plumbing (Keychain, SMTP, rendering, CSV I/O) lives in common.py.
+
 Usage:
   python3 send.py            # dry-run: render and preview every email, send nothing
   python3 send.py --send     # preview, then ask 'Send N emails? [y/N]', then send
@@ -21,68 +23,24 @@ One-time Keychain setup (stores the Gmail APP password, encrypted, not on disk):
   security add-generic-password -s mailmerge-gmail -a "$USER" -w
 """
 import argparse
-import configparser
-import csv
-import getpass
 import mimetypes
 import os
-import re
-import smtplib
-import subprocess
 import sys
 from email.message import EmailMessage
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DB = os.path.join(HERE, "mailmerge_database.csv")
-LOG = os.path.join(HERE, "sent_log.csv")
-TEMPLATE = os.path.join(HERE, "mailmerge_template.txt")
-SERVER_CONF = os.path.join(HERE, "mailmerge_server.conf")
-KEYCHAIN_SERVICE = "mailmerge-gmail"
+import common
 
 
-def get_password():
-    """Fetch the Gmail app password from the macOS Keychain."""
-    try:
-        out = subprocess.run(
-            ["security", "find-generic-password",
-             "-s", KEYCHAIN_SERVICE, "-a", getpass.getuser(), "-w"],
-            capture_output=True, text=True, check=True,
-        )
-        return out.stdout.strip()
-    except subprocess.CalledProcessError:
-        sys.exit(
-            f"\nERROR: no Keychain entry '{KEYCHAIN_SERVICE}' for user "
-            f"'{getpass.getuser()}'.\nRun this once to store your Gmail app password:\n"
-            f'  security add-generic-password -s {KEYCHAIN_SERVICE} -a "$USER" -w\n'
-        )
-
-
-def load_template():
-    """Split the template into its header dict and body, preserving raw text for {{subst}}."""
-    raw = open(TEMPLATE, encoding="utf-8").read()
-    head, _, body = raw.partition("\n\n")
-    headers = {}
-    for line in head.splitlines():
-        if ":" in line:
-            k, _, v = line.partition(":")
-            headers[k.strip().upper()] = v.strip()
-    return headers, body
-
-
-def render(text, row):
-    """Replace every {{column}} with the row value."""
-    return re.sub(r"\{\{(\w+)\}\}", lambda m: row.get(m.group(1), m.group(0)), text)
-
-
-def build_message(row, headers, body):
+def build_message(row, headers, body, base_dir):
+    """Render an email; ATTACHMENT is resolved relative to `base_dir` (the workspace)."""
     msg = EmailMessage()
-    msg["To"] = render(headers["TO"], row)
-    msg["Subject"] = render(headers["SUBJECT"], row)
-    msg["From"] = render(headers.get("FROM", ""), row)
-    msg.set_content(render(body, row))
+    msg["To"] = common.render(headers["TO"], row)
+    msg["Subject"] = common.render(headers["SUBJECT"], row)
+    msg["From"] = common.render(headers.get("FROM", ""), row)
+    msg.set_content(common.render(body, row))
     attach = headers.get("ATTACHMENT")
     if attach:
-        path = os.path.join(HERE, render(attach, row))
+        path = common.resolve(common.render(attach, row), base_dir)
         ctype, _ = mimetypes.guess_type(path)
         maintype, subtype = (ctype or "application/octet-stream").split("/", 1)
         with open(path, "rb") as f:
@@ -91,46 +49,64 @@ def build_message(row, headers, body):
     return msg
 
 
-def read_rows():
-    with open(DB, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        return reader.fieldnames, list(reader)
-
-
-def archive(fieldnames, sent_rows):
-    """Append sent rows to sent_log.csv (creating it with a header if needed)."""
-    new_log = not os.path.exists(LOG) or os.path.getsize(LOG) == 0
-    with open(LOG, "a", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
-        if new_log:
-            w.writeheader()
-        w.writerows(sent_rows)
-
-
-def write_db(fieldnames, rows):
-    """Rewrite the database with exactly `rows` (header always written)."""
-    with open(DB, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=fieldnames)
-        w.writeheader()
-        w.writerows(rows)
-
-
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--send", action="store_true", help="actually send (default is dry-run preview)")
+    ap.add_argument("--config", help="config path (default ./config.toml or $OUTREACH_CONFIG)")
+    ap.add_argument("--send", action="store_true", help="actually send (default: dry-run)")
     ap.add_argument("--yes", action="store_true", help="skip the confirmation prompt")
     args = ap.parse_args()
 
-    fieldnames, rows = read_rows()
+    cfg = common.load_config(common.find_config(args.config))
+    workspace = cfg["workspace"]
+    DB = cfg["files"]["database"]
+    LOG = cfg["files"]["sent_log"]
+    TEMPLATE = cfg["files"]["template"]
+
+    fieldnames, rows = common.read_rows(DB)
     if not rows:
         print(f"No targets in {os.path.basename(DB)} (header only). Nothing to send.")
         return
-    headers, body = load_template()
+
+    # Idempotency + de-dup. Never send to an address already in sent_log.csv (closes
+    # the crash window where a row was archived but not yet removed from the DB), and
+    # never send the SAME address twice within one batch (case/whitespace-insensitive).
+    already = common.sent_emails(LOG)
+    seen, fresh = set(), []
+    n_sent = n_dup = n_blank = 0
+    for r in rows:
+        em = common.normalize_email(r.get("contact_email"))
+        if not em:
+            n_blank += 1
+        elif em in already:
+            n_sent += 1
+        elif em in seen:
+            n_dup += 1
+        else:
+            seen.add(em)
+            fresh.append(r)
+    for label, n in (("already in the sent log", n_sent),
+                     ("duplicated within this batch", n_dup),
+                     ("missing a contact_email", n_blank)):
+        if n:
+            print(f"Skipping {n} row(s) {label}.")
+    if n_sent or n_dup or n_blank:
+        print()
+    rows = fresh
+    if not rows:
+        print("Nothing new to send.")
+        return
+
+    if not os.path.exists(TEMPLATE):
+        sys.exit(f"ERROR: template not found: {TEMPLATE}")
+    headers, body = common.load_template(TEMPLATE)
+    missing = [h for h in ("TO", "SUBJECT") if h not in headers]
+    if missing:
+        sys.exit(f"ERROR: template {TEMPLATE} missing header(s): {', '.join(missing)}")
 
     print(f"=== {len(rows)} email(s) staged ===\n")
     for r in rows:
-        print(f"  TO:      {render(headers['TO'], r)}")
-        print(f"  SUBJECT: {render(headers['SUBJECT'], r)}\n")
+        print(f"  TO:      {common.render(headers['TO'], r)}")
+        print(f"  SUBJECT: {common.render(headers['SUBJECT'], r)}\n")
 
     if not args.send:
         print("Dry-run only. Re-run with --send to deliver.")
@@ -142,29 +118,51 @@ def main():
             print("Aborted. Nothing sent.")
             return
 
-    conf = configparser.ConfigParser()
-    conf.read(SERVER_CONF)
-    s = conf["smtp_server"]
-    host, port, username = s["host"], int(s["port"]), s["username"]
-    password = get_password()
+    try:
+        common.validate_for_send(cfg)
+    except ValueError as e:
+        sys.exit(f"ERROR: {e}")
+    em = cfg["email"]
+    username = em["address"]
+    host, port = em["smtp_host"], int(em["smtp_port"])
+    password = common.get_password(em["keychain_service"])
 
-    sent, failed = [], []
-    with smtplib.SMTP(host, port) as smtp:
-        smtp.starttls()
-        smtp.login(username, password)
+    # Back up the canonical CSVs before mutating them so a crash is recoverable.
+    common.backup(LOG)
+    common.backup(DB)
+    # Preflight: ensure the sent log has the current schema (adds sent_at to old
+    # logs) BEFORE any message goes out, never after a send.
+    common.migrate_sent_log(LOG)
+
+    # Transactional send: archive each success IMMEDIATELY and rewrite the DB to
+    # only the not-yet-sent rows, so a crash mid-batch can never (a) lose a row we
+    # already sent or (b) leave a sent row staged for an accidental re-send.
+    remaining, failed = list(rows), []
+    with common.smtp_session(host, port, username, password) as smtp:
         for r in rows:
             try:
-                smtp.send_message(build_message(r, headers, body))
-                print(f"  sent -> {r['contact_email']} ({r['company']})")
-                sent.append(r)
+                smtp.send_message(build_message(r, headers, body, workspace))
             except Exception as e:
                 print(f"  FAILED -> {r['contact_email']} ({r['company']}): {e}")
                 failed.append(r)
+                continue
+            # Sent successfully. A failure recording it is NOT a send failure: we
+            # must stop immediately rather than keep sending into an inconsistent
+            # state. The idempotency check above makes a later retry safe.
+            try:
+                common.archive(LOG, common.SENT_LOG_FIELDS,
+                               [{**r, "sent_at": common.utcnow_iso()}])
+                remaining.remove(r)
+                common.write_db(DB, fieldnames, remaining)
+            except Exception as e:
+                sys.exit(f"\n  CRITICAL: sent to {r['contact_email']} but failed to "
+                         f"record it: {e}\n  Aborting batch. Reconcile {os.path.basename(LOG)} "
+                         f"and {os.path.basename(DB)} before resending.")
+            print(f"  sent -> {r['contact_email']} ({r['company']})")
 
-    if sent:
-        archive(fieldnames, sent)
-        write_db(fieldnames, failed)  # keep only failed rows for retry (empty if all sent)
-        print(f"\nDone. {len(sent)} sent and archived to {os.path.basename(LOG)}.")
+    sent_n = len(rows) - len(failed)
+    if sent_n:
+        print(f"\nDone. {sent_n} sent and archived to {os.path.basename(LOG)}.")
         if failed:
             print(f"{len(failed)} failed and kept in {os.path.basename(DB)} for retry.")
         else:

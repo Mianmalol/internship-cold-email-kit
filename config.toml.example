@@ -1,0 +1,31 @@
+# Machine settings for the outreach pipeline.
+#
+# This file is ONLY machine config. Your campaign WORDING lives in
+# mailmerge_template.txt; your operating rules live in CLAUDE.md. Keep them there.
+#
+# Copy this to config.toml and fill it in. config.toml is gitignored.
+
+[email]
+address = "you@gmail.com"
+smtp_host = "smtp.gmail.com"
+smtp_port = 587
+imap_host = "imap.gmail.com"
+# macOS Keychain service holding your Gmail APP password (not your login password).
+# Store it once:  security add-generic-password -s mailmerge-gmail -a "$USER" -w
+keychain_service = "mailmerge-gmail"
+
+[files]
+template = "mailmerge_template.txt"
+database = "mailmerge_database.csv"
+sent_log = "sent_log.csv"
+queue = "outreach_queue.csv"
+resume = "resume.pdf"
+
+[pacing]
+batch_size = 14            # cold emails per day; do not blast
+followup_after_days = 6    # mark a silent contact follow-up-able after this many days
+
+[outreach]
+# The ONE thing you specify: what kind of internships to target. The agent /
+# internship-scout uses this as its search brief.
+area = "<e.g. Machine Learning, scientific computing, physics simulation; remote, unpaid>"

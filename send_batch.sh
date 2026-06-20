@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# DEPRECATED. Use `python3 send.py` instead (Keychain-backed, no password prompt,
+# atomic/backed-up archiving, runs anywhere). This script remains only as a
+# rollback path that drives raw `mailmerge` and will be removed once the new path
+# has shipped a couple of clean batches.
+#
 # Sends the current batch in mailmerge_database.csv, then ARCHIVES the sent
 # rows into sent_log.csv and empties the database. This way a company is never
 # emailed twice: once sent, it lives in sent_log.csv and is gone from the

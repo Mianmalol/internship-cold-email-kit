@@ -1,1 +1,11 @@
-mailmerge
+# Runtime needs NOTHING beyond the Python 3.11+ standard library.
+#
+# Install the tool (recommended, editable so `outreach` + bundled examples work):
+#   pip install -e .
+# Optional cross-platform credential storage:
+#   pip install -e ".[keyring]"
+# Dev tooling (tests + lint):
+#   pip install -e ".[dev]"
+#
+# Only the DEPRECATED send_batch.sh fallback needs the third-party `mailmerge`:
+# mailmerge
