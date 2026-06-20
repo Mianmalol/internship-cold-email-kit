@@ -31,4 +31,4 @@ outreach = "outreach_cli:main"
 outreach-send = "send:main"
 
 [tool.setuptools]
-py-modules = ["common", "send", "read_replies", "thread_reply", "outreach_cli"]
+py-modules = ["common", "send", "read_replies", "outreach_cli"]

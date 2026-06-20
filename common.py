@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Shared plumbing for the internship-outreach pipeline.
 
-This module holds the plumbing shared by send.py, read_replies.py, thread_reply.py,
-and outreach_cli.py: the Keychain fetch, IMAP login, SMTP session, header decoding,
+This module holds the plumbing shared by send.py, read_replies.py, and
+outreach_cli.py: the Keychain fetch, IMAP login, SMTP session, header decoding,
 template rendering, machine config, and (atomic, backed-up) CSV helpers.
 
 Config: machine settings come from `config.toml` (see config.toml.example). The
@@ -288,18 +288,10 @@ def get_password(service=KEYCHAIN_SERVICE):
 
 
 @contextlib.contextmanager
-def smtp_session(host, port, username, password, ssl_context=None):
-    """Logged-in STARTTLS SMTP session as a context manager.
-
-    Preserves both original call sites: send.py used a plain `starttls()`, while
-    thread_reply.py passed an explicit ssl context. Pass `ssl_context` to get the
-    latter; omit it for the former. Behavior is otherwise identical.
-    """
+def smtp_session(host, port, username, password):
+    """Logged-in STARTTLS SMTP session as a context manager."""
     with smtplib.SMTP(host, port) as smtp:
-        if ssl_context is not None:
-            smtp.starttls(context=ssl_context)
-        else:
-            smtp.starttls()
+        smtp.starttls()
         smtp.login(username, password)
         yield smtp
 
