@@ -21,7 +21,7 @@ contacted and who replied.
 ---
 
 ## Contents
-- [The 60-second mental model](#the-60-second-mental-model)
+- [The Overview](#the-60-second-mental-model)
 - [Requirements](#requirements)
 - [Install](#install)
 - [First-time setup](#first-time-setup)
@@ -38,7 +38,7 @@ contacted and who replied.
 
 ---
 
-## The overview
+## The Overview
 
 Everything is a **funnel made of three CSV files**. A company moves left-to-right and
 lives in exactly one place at a time:
