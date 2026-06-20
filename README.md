@@ -38,7 +38,7 @@ contacted and who replied.
 
 ---
 
-## The 60-second mental model
+## The overview
 
 Everything is a **funnel made of three CSV files**. A company moves left-to-right and
 lives in exactly one place at a time:
