@@ -5,10 +5,10 @@ Replaces the interactive `mailmerge` password prompt: the Gmail app password is
 read from the macOS Keychain at send time, so no TTY / hidden prompt is needed.
 This runs anywhere (including non-interactively).
 
-Reuses the existing files so behavior matches the old flow:
-  - mailmerge_database.csv   targets (header: contact_email,contact_name,company,role,subject,note)
-  - mailmerge_template.txt   email, with TO/SUBJECT/FROM/ATTACHMENT headers + {{placeholders}}
-  - mailmerge_server.conf    SMTP host/port/username (INI)
+Files (paths come from config.toml [files]):
+  - the database CSV    targets (header: contact_email,contact_name,company,role,subject,note)
+  - the template        email, with TO/SUBJECT/FROM/ATTACHMENT headers + {{placeholders}}
+  - config.toml         your Gmail address, SMTP host/port ([email])
 On a successful send it archives the sent rows into sent_log.csv and resets the
 database to header-only, so no company is ever emailed twice.
 

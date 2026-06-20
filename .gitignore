@@ -6,7 +6,6 @@
 # Your real working files (your info + real recipient emails)
 mailmerge_template.txt
 mailmerge_database.csv
-mailmerge_server.conf
 config.toml
 sent_log.csv
 outreach_queue.csv

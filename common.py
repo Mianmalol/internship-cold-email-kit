@@ -6,11 +6,9 @@ and outreach_cli.py: the Keychain fetch, IMAP login, SMTP session, header decodi
 template rendering, machine config, and (atomic, backed-up) CSV helpers.
 
 Config: machine settings come from `config.toml` (see config.toml.example). The
-Gmail app password still comes only from the macOS Keychain. For backward
-compatibility, if `config.toml` lacks an email address we fall back to the
-`username` in the legacy `mailmerge_server.conf`.
+Gmail app password comes from a credential backend (keyring / macOS Keychain /
+env var), never from a file.
 """
-import configparser
 import contextlib
 import csv
 import datetime
@@ -28,7 +26,6 @@ from email.header import decode_header, make_header
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_CONFIG_NAME = "config.toml"
-LEGACY_CONF_NAME = "mailmerge_server.conf"
 
 KEYCHAIN_SERVICE = "mailmerge-gmail"
 IMAP_HOST = "imap.gmail.com"
@@ -105,22 +102,12 @@ def resolve(path, base):
     return path if os.path.isabs(path) else os.path.join(base, path)
 
 
-def _legacy_address(workspace):
-    """Bridge: read the sender address from a legacy mailmerge_server.conf if present."""
-    try:
-        cp = configparser.ConfigParser()
-        cp.read(os.path.join(workspace, LEGACY_CONF_NAME))
-        return cp["smtp_server"]["username"]
-    except Exception:
-        return None
-
-
 def load_config(path=None):
     """Return machine config with ABSOLUTE file paths and the workspace dir.
 
     Shape: {email, files (absolute paths), pacing, outreach, workspace, config_path}.
     Never raises on a missing file — defaults fill in everything except the email
-    address, which falls back to a legacy mailmerge_server.conf when available.
+    address (set [email].address in config.toml before sending).
     """
     path = path or find_config()
     workspace = os.path.dirname(os.path.abspath(path))
@@ -130,10 +117,6 @@ def load_config(path=None):
     except FileNotFoundError:
         data = {}
     email_cfg = {**DEFAULT_EMAIL, **data.get("email", {})}
-    if not email_cfg.get("address"):
-        legacy = _legacy_address(workspace)
-        if legacy:
-            email_cfg["address"] = legacy
     files_cfg = {k: resolve(v, workspace)
                  for k, v in {**DEFAULT_FILES, **data.get("files", {})}.items()}
     return {

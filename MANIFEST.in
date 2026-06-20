@@ -1,5 +1,5 @@
 include README.md LICENSE SECURITY.md CONTRIBUTING.md
 include config.toml.example mailmerge_template.txt.example
-include mailmerge_database.csv.example mailmerge_server.conf.example
+include mailmerge_database.csv.example
 include requirements.txt ruff.toml
 recursive-include tests *.py *.txt *.pdf *.json

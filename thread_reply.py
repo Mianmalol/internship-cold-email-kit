@@ -18,8 +18,7 @@ read_replies.py. Two subcommands:
 Strictly: read is read-only; send only sends when --send is passed.
 
 Shared plumbing (Keychain, IMAP login, SMTP, header decoding, body extraction)
-lives in common.py. The sender address is read from mailmerge_server.conf, not
-hardcoded.
+lives in common.py. The sender address is read from config.toml ([email].address).
 """
 import argparse
 import email
@@ -34,8 +33,7 @@ import common
 def _email_cfg(config_path=None):
     em = common.load_config(common.find_config(config_path))["email"]
     if not em.get("address"):
-        sys.exit("ERROR: no email address in config.toml ([email] address) or "
-                 "mailmerge_server.conf.")
+        sys.exit("ERROR: set [email].address in config.toml.")
     return em
 
 

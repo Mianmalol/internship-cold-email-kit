@@ -375,5 +375,4 @@ The codebase is small and standard-library only:
 ---
 
 ## License
-MIT — see [LICENSE](LICENSE). The deprecated `send_batch.sh` rollback path builds on
-[mailmerge](https://github.com/awdeorio/mailmerge) by awdeorio (also MIT).
+MIT — see [LICENSE](LICENSE).

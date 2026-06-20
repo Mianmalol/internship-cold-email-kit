@@ -15,7 +15,7 @@ Shared plumbing (Keychain, IMAP login, header decoding) lives in common.py.
 
 Reuses the existing pipeline files/credential so behavior matches send.py:
   - sent_log.csv            the contact list to check (contact_email, company, ...)
-  - mailmerge_server.conf   SMTP/IMAP username (INI [smtp_server] -> username)
+  - config.toml             your Gmail address + IMAP host ([email])
   - Keychain service 'mailmerge-gmail'   the Gmail app password
 
 Usage:
@@ -206,8 +206,7 @@ def main():
     em = cfg["email"]
     username = em.get("address")
     if not username:
-        sys.exit("ERROR: no email address in config.toml ([email] address) or "
-                 "mailmerge_server.conf.")
+        sys.exit("ERROR: set [email].address in config.toml.")
     password = common.get_password(em["keychain_service"])
 
     imap = common.imap_login(username, password, readonly=True, host=em["imap_host"])

@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Marco Li" }]
-keywords = ["cold-email", "outreach", "internship", "gmail", "mailmerge"]
+keywords = ["cold-email", "outreach", "internship", "gmail", "job-search"]
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
