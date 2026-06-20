@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "internship-outreach"
+version = "0.1.0"
+description = "A tiny, transparent toolkit for personalized internship/job cold emails from Gmail, with a never-email-twice log."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Marco Li" }]
+keywords = ["cold-email", "outreach", "internship", "gmail", "job-search"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Environment :: Console",
+    "Topic :: Communications :: Email",
+]
+dependencies = []  # runtime is standard-library only
+
+[project.optional-dependencies]
+keyring = ["keyring>=24"]            # cross-platform credential storage
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.urls]
+Homepage = "https://github.com/Mianmalol/internship-cold-email-kit"
+
+[project.scripts]
+outreach = "outreach_cli:main"
+outreach-send = "send:main"
+
+[tool.setuptools]
+py-modules = ["common", "send", "read_replies", "thread_reply", "outreach_cli"]

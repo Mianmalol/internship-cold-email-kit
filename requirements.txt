@@ -1,1 +1,8 @@
-mailmerge
+# Runtime needs NOTHING beyond the Python 3.11+ standard library.
+#
+# Install the tool (exposes the `outreach` + `outreach-send` commands):
+#   pip install .
+# Optional cross-platform credential storage:
+#   pip install ".[keyring]"
+# Dev tooling (tests + lint):
+#   pip install -e ".[dev]"

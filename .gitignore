@@ -1,13 +1,18 @@
 # --- Private: never publish ---
-# Your resume and any PDFs
+# Your resume and any PDFs (but DO commit the tiny test fixture)
 *.pdf
+!tests/fixtures/resume.pdf
 
 # Your real working files (your info + real recipient emails)
 mailmerge_template.txt
 mailmerge_database.csv
-mailmerge_server.conf
+config.toml
 sent_log.csv
+outreach_queue.csv
 portal_targets_for_later.csv
+
+# Timestamped CSV backups written before any mutation
+.backups/
 
 # Gmail API credentials, if ever used
 credentials.json
@@ -19,6 +24,10 @@ token.json
 # Python
 __pycache__/
 *.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
 
 # Personal operating guide (contains your own contacts/notes)
 CLAUDE.md

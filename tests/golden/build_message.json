@@ -1,0 +1,23 @@
+{
+  "From": "Test Sender <sender@example.com>",
+  "Subject": "ML internship, remote",
+  "To": "careers@example.com",
+  "body_text": "Hi Alex,\n\nI'm reaching out because I'd love to intern at Example Co. I saw your Who's Hiring post, and your simulation work is exactly my space.\n\nBest regards,\nTest Sender\n",
+  "is_multipart": true,
+  "parts": [
+    {
+      "content_type": "text/plain",
+      "disposition": null,
+      "filename": null,
+      "payload_len": 172,
+      "payload_sha256": "dd40c9e98705969d0e0b5f710c071c501087592d2dd4301b17cb2c7ba91cca26"
+    },
+    {
+      "content_type": "application/pdf",
+      "disposition": "attachment",
+      "filename": "resume.pdf",
+      "payload_len": 45,
+      "payload_sha256": "5a838678058f6de375e8635b5f2fea47a4e5f07cb1a882a44b10f39abc6f34ff"
+    }
+  ]
+}

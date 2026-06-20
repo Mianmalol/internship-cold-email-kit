@@ -1,0 +1,11 @@
+TO: {{contact_email}}
+SUBJECT: {{subject}}
+FROM: Test Sender <sender@example.com>
+ATTACHMENT: resume.pdf
+
+Hi {{contact_name}},
+
+I'm reaching out because I'd love to intern at {{company}}. {{note}}.
+
+Best regards,
+Test Sender
