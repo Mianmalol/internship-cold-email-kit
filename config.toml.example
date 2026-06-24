@@ -1,7 +1,7 @@
 # Machine settings for the outreach pipeline.
 #
 # This file is ONLY machine config. Your campaign WORDING lives in
-# mailmerge_template.txt; your operating rules live in CLAUDE.md. Keep them there.
+# mailmerge_template.txt; your operating rules live in your local agent guide.
 #
 # Copy this to config.toml and fill it in. config.toml is gitignored.
 

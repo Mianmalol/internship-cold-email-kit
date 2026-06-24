@@ -29,5 +29,6 @@ __pycache__/
 build/
 dist/
 
-# Personal operating guide (contains your own contacts/notes)
+# Personal operating guides (contain your own contacts/notes)
+AGENTS.md
 CLAUDE.md
